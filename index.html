@@ -499,7 +499,7 @@ function clutchHapticEngine(dt) {
 //  PEDALS — spring-return, clutch locks at 100%
 // ═══════════════════════════════════════════
 const P = {
-  clutch:{val:0,target:0,active:false,tid:null,locked:false},
+  clutch:{val:0,target:0,active:false,tid:null},
   brake: {val:0,target:0,active:false,tid:null},
   gas:   {val:0,target:0,active:false,tid:null},
 };
@@ -513,8 +513,6 @@ function setupPedal(trackId, key, onChange){
     e.preventDefault();
     if(p.tid!==null) return;
     initAudio(); if(AC&&AC.state==='suspended') AC.resume();
-    // Touching clutch again cancels lock
-    if(key==='clutch'&&p.locked) p.locked=false;
     const t=e.changedTouches[0]; p.tid=t.identifier; p.active=true;
     p.val=p.target=pct(t.clientY); onChange(p.val);
   },{passive:false});
@@ -529,11 +527,7 @@ function setupPedal(trackId, key, onChange){
   function end(e){
     for(const t of e.changedTouches){
       if(t.identifier===p.tid){
-        if(key==='clutch'&&p.val>=0.98){
-          p.locked=true; p.val=1; p.target=1;
-        } else {
-          p.locked=false; p.target=0;
-        }
+        p.target=0;
         p.tid=null; p.active=false;
         break;
       }
@@ -545,14 +539,12 @@ function setupPedal(trackId, key, onChange){
   // Mouse
   track.addEventListener('mousedown',e=>{
     initAudio();
-    if(key==='clutch'&&p.locked) p.locked=false;
     p.active=true; p.val=p.target=pct(e.clientY); onChange(p.val);
   });
   window.addEventListener('mousemove',e=>{ if(!p.active)return; p.val=p.target=pct(e.clientY); onChange(p.val); });
   window.addEventListener('mouseup',()=>{
     if(!p.active) return;
-    if(key==='clutch'&&p.val>=0.98){ p.locked=true; p.val=1; p.target=1; }
-    else { p.locked=false; p.target=0; }
+    p.target=0;
     p.active=false;
   });
 }
@@ -571,7 +563,7 @@ setupPedal('g-track','gas',   v=>{ S.gas=v;    pedalUI('gf','g-thumb','g-pct',v)
 function tickPedals(dt){
   const K=10;
   for(const [key,p] of Object.entries(P)){
-    if(p.active||p.locked) continue;
+    if(p.active) continue;
     const d=p.target-p.val;
     p.val=Math.abs(d)<.003?p.target:p.val+d*Math.min(K*dt,1);
     S[key]=p.val;
