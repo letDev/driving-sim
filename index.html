@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -8,289 +9,150 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap');
 
 *, *::before, *::after {
-  box-sizing: border-box; margin: 0; padding: 0;
-  -webkit-user-select: none; user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: none;
+box-sizing: border-box; margin: 0; padding: 0;
+-webkit-user-select: none; user-select: none;
+-webkit-tap-highlight-color: transparent;
+touch-action: none;
 }
-html, body {
-  width: 100%; height: 100%;
-  overflow: hidden;
-  background: #080a10;
-  font-family: 'Share Tech Mono', monospace;
-  color: #b8bcd8;
-}
+html, body { width:100%; height:100%; overflow:hidden; background:#080a10; font-family:‘Share Tech Mono’,monospace; color:#b8bcd8; }
 
 :root {
-  --accent: #f0a500;
-  --red:    #e03535;
-  --green:  #18b858;
-  --blue:   #2878e0;
-  --panel:  rgba(8,10,18,0.82);
-  --border: rgba(255,255,255,0.07);
-  --dim:    #3a3d58;
+–accent:#f0a500; –red:#e03535; –green:#18b858; –blue:#2878e0;
+–panel:rgba(8,10,18,0.84); –border:rgba(255,255,255,0.07); –dim:#3a3d58;
 }
 
 /* STREET VIEW */
-#sv-wrap {
-  position: fixed; inset: 0; z-index: 0;
-  background: #111420; overflow: hidden;
-}
-#sv-wrap iframe {
-  width: 100%; height: 100%; border: none;
-  pointer-events: none; opacity: 0.5;
-  transform: scale(1.06);
-}
-#sv-grad {
-  position: absolute; inset: 0;
-  background: linear-gradient(to bottom,
-    rgba(8,10,18,.6) 0%,
-    rgba(8,10,18,.05) 38%,
-    rgba(8,10,18,.55) 72%,
-    rgba(8,10,18,.97) 100%);
-}
-#speed-vign {
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse at center, transparent 35%, rgba(8,10,18,.65) 100%);
-  opacity: 0; transition: opacity .3s; pointer-events: none;
-}
+#sv-wrap { position:fixed; inset:0; z-index:0; background:#111420; overflow:hidden; }
+#sv-wrap iframe { width:100%; height:100%; border:none; pointer-events:none; opacity:0.5; transform:scale(1.06); }
+#sv-grad { position:absolute; inset:0; background:linear-gradient(to bottom,rgba(8,10,18,.6) 0%,rgba(8,10,18,.05) 38%,rgba(8,10,18,.55) 72%,rgba(8,10,18,.97) 100%); }
+#speed-vign { position:absolute; inset:0; background:radial-gradient(ellipse at center,transparent 35%,rgba(8,10,18,.65) 100%); opacity:0; transition:opacity .3s; pointer-events:none; }
 
 /* LAYOUT */
-#ui {
-  position: fixed; inset: 0; z-index: 1;
-  display: flex; flex-direction: column;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
+#ui { position:fixed; inset:0; z-index:1; display:flex; flex-direction:column; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); pointer-events:none; }
+/* re-enable pointer events on all direct children except the layer itself */
+#ui > * { pointer-events:auto; }
 
 /* TOP BAR */
-#top-bar {
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 14px 6px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-}
-#title {
-  font-family: 'Orbitron', monospace;
-  font-size: 11px; font-weight: 900;
-  color: var(--accent); letter-spacing: 3px;
-}
-#engine-pill { display: flex; align-items: center; gap: 6px; font-size: 10px; }
-#elight {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--red); box-shadow: 0 0 5px var(--red); transition: all .25s;
-}
-#elight.on { background: var(--green); box-shadow: 0 0 8px var(--green); }
+#top-bar { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:8px 14px 6px; background:var(–panel); border-bottom:1px solid var(–border); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+#title { font-family:‘Orbitron’,monospace; font-size:11px; font-weight:900; color:var(–accent); letter-spacing:3px; }
+#engine-pill { display:flex; align-items:center; gap:6px; font-size:10px; }
+#elight { width:7px; height:7px; border-radius:50%; background:var(–red); box-shadow:0 0 5px var(–red); transition:all .25s; }
+#elight.on { background:var(–green); box-shadow:0 0 8px var(–green); }
 
-/* HINT — strictly fixed height, single line */
-#hint-bar {
-  flex-shrink: 0;
-  height: 34px;
-  display: flex; align-items: center; justify-content: center;
-  padding: 0 14px;
-  background: rgba(240,165,0,.07);
-  border-bottom: 1px solid rgba(240,165,0,.14);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  overflow: hidden;
-}
-#hint-text {
-  font-size: 11px; color: var(--accent); letter-spacing: .4px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  width: 100%; text-align: center;
-  transition: opacity .18s;
-}
+/* HINT — fixed height, no reflow */
+#hint-bar { flex-shrink:0; height:34px; display:flex; align-items:center; justify-content:center; padding:0 14px; background:rgba(240,165,0,.07); border-bottom:1px solid rgba(240,165,0,.14); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); overflow:hidden; }
+#hint-text { font-size:11px; color:var(–accent); letter-spacing:.4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; text-align:center; transition:opacity .18s; }
 
 /* GAUGES */
-#gauges {
-  flex-shrink: 0;
-  display: flex; gap: 10px;
-  padding: 8px 12px 4px;
-  justify-content: center;
-}
-.g-card {
-  flex: 1; max-width: 155px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 7px 10px 5px;
-  display: flex; flex-direction: column; align-items: center; gap: 1px;
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-}
-.g-label { font-size: 8px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; }
-.g-arc { width: 100%; }
-.g-arc svg { width: 100%; display: block; overflow: visible; }
-.g-val {
-  font-family: 'Orbitron', monospace;
-  font-size: 21px; font-weight: 700; color: var(--accent);
-  min-width: 60px; text-align: center; line-height: 1;
-}
-.g-val.red { color: var(--red); }
-.g-unit { font-size: 8px; color: var(--dim); letter-spacing: 1px; }
+#gauges { flex-shrink:0; display:flex; gap:10px; padding:8px 12px 4px; justify-content:center; }
+.g-card { flex:1; max-width:155px; background:var(–panel); border:1px solid var(–border); border-radius:14px; padding:7px 10px 5px; display:flex; flex-direction:column; align-items:center; gap:1px; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+.g-label { font-size:8px; letter-spacing:2px; color:var(–dim); text-transform:uppercase; }
+.g-arc { width:100%; }
+.g-arc svg { width:100%; display:block; overflow:visible; }
+.g-val { font-family:‘Orbitron’,monospace; font-size:21px; font-weight:700; color:var(–accent); min-width:60px; text-align:center; line-height:1; }
+.g-val.red { color:var(–red); }
+.g-unit { font-size:8px; color:var(–dim); letter-spacing:1px; }
 
 /* GEAR + BITE */
-#mid-row {
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  gap: 10px; padding: 4px 12px;
-}
-#gear-strip {
-  display: flex;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px; overflow: hidden;
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-}
-.gb {
-  width: 38px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 700;
-  color: var(--dim);
-  border: none; background: transparent;
-  border-right: 1px solid var(--border);
-  cursor: pointer; transition: all .12s;
-}
-.gb:last-child { border-right: none; }
-.gb.act { background: var(--accent); color: #000; }
-.gb[data-g="0"].act { background: var(--blue); color: #fff; }
-.gb[data-g="-1"].act { background: var(--red); color: #fff; }
+#mid-row { flex-shrink:0; display:flex; align-items:center; justify-content:center; gap:10px; padding:4px 12px; }
+#gear-strip { display:flex; background:var(–panel); border:1px solid var(–border); border-radius:10px; overflow:hidden; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+.gb { width:38px; height:32px; display:flex; align-items:center; justify-content:center; font-family:‘Orbitron’,monospace; font-size:12px; font-weight:700; color:var(–dim); border:none; background:transparent; border-right:1px solid var(–border); cursor:pointer; transition:all .12s; }
+.gb:last-child { border-right:none; }
+.gb.act { background:var(–accent); color:#000; }
+.gb[data-g=“0”].act { background:var(–blue); color:#fff; }
+.gb[data-g=”-1”].act { background:var(–red); color:#fff; }
 
-#bite-pill {
-  display: flex; align-items: center; gap: 6px;
-  background: var(--panel); border: 1px solid var(--border);
-  border-radius: 10px; padding: 6px 12px;
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-}
-#bdot {
-  width: 8px; height: 8px; border-radius: 50%;
-  border: 2px solid var(--dim); transition: all .1s;
-}
-#bdot.on { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-#bite-lbl { font-size: 9px; color: var(--dim); letter-spacing: 1px; white-space: nowrap; }
+#bite-pill { display:flex; align-items:center; gap:6px; background:var(–panel); border:1px solid var(–border); border-radius:10px; padding:6px 12px; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+#bdot { width:8px; height:8px; border-radius:50%; border:2px solid var(–dim); transition:all .1s; }
+#bdot.on { border-color:var(–accent); background:var(–accent); box-shadow:0 0 8px var(–accent); }
+#bite-lbl { font-size:9px; color:var(–dim); letter-spacing:1px; white-space:nowrap; }
 
 /* PEDALS */
-#pedals {
-  flex: 1; min-height: 0;
-  display: flex; gap: 8px;
-  padding: 6px 12px 8px;
-}
-.pu {
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
-}
-.pu-name { font-size: 8px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; }
-.pu-pct  { font-size: 11px; color: #8890b0; min-width: 36px; text-align: center; }
-.track {
-  flex: 1; width: 100%; min-height: 100px;
-  background: var(--panel); border: 1px solid var(--border);
-  border-radius: 20px; position: relative; overflow: hidden;
-  cursor: pointer;
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-}
-.fill {
-  position: absolute; bottom: 0; left: 0; right: 0; border-radius: 20px;
-}
-#cf { background: linear-gradient(to top, #2020b0, #6060ff); }
-#bf { background: linear-gradient(to top, #800, var(--red)); }
-#gf { background: linear-gradient(to top, #073, var(--green)); }
+#pedals { flex:1; min-height:0; display:flex; gap:8px; padding:6px 12px 8px; }
+.pu { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; }
+.pu-name { font-size:8px; letter-spacing:2px; color:var(–dim); text-transform:uppercase; }
+.pu-pct  { font-size:11px; color:#8890b0; min-width:36px; text-align:center; }
+.track { flex:1; width:100%; min-height:100px; background:var(–panel); border:1px solid var(–border); border-radius:20px; position:relative; overflow:hidden; cursor:pointer; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+.fill { position:absolute; bottom:0; left:0; right:0; border-radius:20px; }
+#cf { background:linear-gradient(to top,#2020b0,#6060ff); }
+#bf { background:linear-gradient(to top,#800,var(–red)); }
+#gf { background:linear-gradient(to top,#073,var(–green)); }
+.thumb { position:absolute; left:50%; transform:translateX(-50%); width:calc(100% - 8px); height:28px; background:linear-gradient(180deg,#3a3d55,#22243a); border:1px solid #505070; border-radius:14px; box-shadow:0 2px 8px rgba(0,0,0,.6); }
+.thumb::after { content:’’; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:22px; height:2px; background:#606080; border-radius:2px; box-shadow:0 -5px 0 #606080, 0 5px 0 #606080; }
+.tick { position:absolute; right:0; width:6px; height:1px; background:var(–accent); opacity:.5; }
+.pu-icon { font-size:18px; }
 
-.thumb {
-  position: absolute; left: 50%; transform: translateX(-50%);
-  width: calc(100% - 8px); height: 28px;
-  background: linear-gradient(180deg, #3a3d55, #22243a);
-  border: 1px solid #505070; border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.6);
-}
-.thumb::after {
-  content: ''; position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%,-50%);
-  width: 22px; height: 2px; background: #606080; border-radius: 2px;
-  box-shadow: 0 -5px 0 #606080, 0 5px 0 #606080;
-}
-.tick {
-  position: absolute; right: 0;
-  width: 6px; height: 1px; background: var(--accent); opacity: .5;
-}
-.pu-icon { font-size: 18px; }
-
-/* START */
+/* START BUTTON — above everything, always clickable */
 #start-btn {
-  position: fixed; bottom: calc(env(safe-area-inset-bottom,0px) + 14px);
-  left: 50%; transform: translateX(-50%);
-  z-index: 9999;
-  pointer-events: auto;
-  background: var(--accent); color: #000;
-  border: none; border-radius: 14px;
-  padding: 13px 38px;
-  font-family: 'Orbitron', monospace;
-  font-size: 13px; font-weight: 900; letter-spacing: 3px;
-  box-shadow: 0 0 28px rgba(240,165,0,.4);
-  cursor: pointer; display: none;
+position:fixed;
+bottom:calc(env(safe-area-inset-bottom,0px) + 14px);
+left:50%; transform:translateX(-50%);
+z-index:9999;
+pointer-events:auto;
+background:var(–accent); color:#000;
+border:none; border-radius:14px;
+padding:13px 38px;
+font-family:‘Orbitron’,monospace; font-size:13px; font-weight:900; letter-spacing:3px;
+box-shadow:0 0 28px rgba(240,165,0,.4);
+cursor:pointer; display:none;
 }
 </style>
+
 </head>
 <body>
 
 <div id="sv-wrap">
-  <iframe
-    src="https://www.google.com/maps/embed?pb=!4v1700000000000!6m8!1m7!1sCAoSLEFGMVFpcE9QNHpQbUxYbXV5NHJ5dGJHNFVJOFZsZkJ5ZUoxNE9wWFpPdzBv!2m2!1d35.6595!2d139.7004!3f160!4f5!5f0.7820865974627469"
-    allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade">
-  </iframe>
+  <iframe src="https://www.google.com/maps/embed?pb=!4v1700000000000!6m8!1m7!1sCAoSLEFGMVFpcE9QNHpQbUxYbXV5NHJ5dGJHNFVJOFZsZkJ5ZUoxNE9wWFpPdzBv!2m2!1d35.6595!2d139.7004!3f160!4f5!5f0.7820865974627469" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
   <div id="sv-grad"></div>
   <div id="speed-vign"></div>
 </div>
 
 <div id="ui">
-
   <div id="top-bar">
     <div id="title">MANUAL TRAINER</div>
-    <div id="engine-pill">
-      <div id="elight"></div>
-      <span id="etext">ВЫКЛ</span>
-    </div>
+    <div id="engine-pill"><div id="elight"></div><span id="etext">ВЫКЛ</span></div>
   </div>
 
-  <div id="hint-bar">
-    <div id="hint-text">Выжми сцепление → N → ЗАПУСТИТЬ</div>
-  </div>
+  <div id="hint-bar"><div id="hint-text">Выжми сцепление → N → ЗАПУСТИТЬ</div></div>
 
   <div id="gauges">
+    <!-- RPM gauge. viewBox 120×70, center(60,64), r=54, arc -168°→-12° -->
     <div class="g-card">
       <div class="g-label">об / мин</div>
       <div class="g-arc">
         <svg viewBox="0 0 120 70">
-          <path d="M10,66 A54,54 0 0,1 110,66"
-                fill="none" stroke="#181b2c" stroke-width="9" stroke-linecap="round"/>
-          <path d="M91,14 A54,54 0 0,1 110,66"
-                fill="none" stroke="#380a0a" stroke-width="9" stroke-linecap="round"/>
-          <path id="rpm-arc" d="M10,66 A54,54 0 0,1 10,66"
-                fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round"/>
-          <line id="rpm-ndl" x1="60" y1="64" x2="60" y2="14"
-                stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"
-                transform-origin="60 64"/>
+          <!-- bg track -->
+          <path d="M7.2,52.8 A54,54 0 1,1 112.8,52.8" fill="none" stroke="#181b2c" stroke-width="9" stroke-linecap="round"/>
+          <!-- redline zone (last ~20%) -->
+          <path d="M96.4,18.2 A54,54 0 0,1 112.8,52.8" fill="none" stroke="#380a0a" stroke-width="9" stroke-linecap="round"/>
+          <!-- live arc -->
+          <path id="rpm-arc" d="M7.2,52.8 A54,54 0 0,1 7.3,52.7" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round"/>
+          <!-- needle — NO transform-origin attr; rotated purely via JS setAttribute -->
+          <line id="rpm-ndl" x1="60" y1="64" x2="60" y2="14" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
           <circle cx="60" cy="64" r="4" fill="var(--accent)"/>
         </svg>
       </div>
       <div class="g-val" id="rpm-val">0</div>
       <div class="g-unit">RPM × 100</div>
     </div>
-    <div class="g-card">
-      <div class="g-label">скорость</div>
-      <div class="g-arc">
-        <svg viewBox="0 0 120 70">
-          <path d="M10,66 A54,54 0 0,1 110,66"
-                fill="none" stroke="#181b2c" stroke-width="9" stroke-linecap="round"/>
-          <path id="spd-arc" d="M10,66 A54,54 0 0,1 10,66"
-                fill="none" stroke="var(--blue)" stroke-width="7" stroke-linecap="round"/>
-          <line id="spd-ndl" x1="60" y1="64" x2="60" y2="14"
-                stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round"
-                transform-origin="60 64"/>
-          <circle cx="60" cy="64" r="4" fill="var(--blue)"/>
-        </svg>
-      </div>
-      <div class="g-val" id="spd-val">0</div>
-      <div class="g-unit">КМ / Ч</div>
-    </div>
+
+```
+<!-- Speed gauge -->
+<div class="g-card">
+  <div class="g-label">скорость</div>
+  <div class="g-arc">
+    <svg viewBox="0 0 120 70">
+      <path d="M7.2,52.8 A54,54 0 1,1 112.8,52.8" fill="none" stroke="#181b2c" stroke-width="9" stroke-linecap="round"/>
+      <path id="spd-arc" d="M7.2,52.8 A54,54 0 0,1 7.3,52.7" fill="none" stroke="var(--blue)" stroke-width="7" stroke-linecap="round"/>
+      <line id="spd-ndl" x1="60" y1="64" x2="60" y2="14" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="60" cy="64" r="4" fill="var(--blue)"/>
+    </svg>
+  </div>
+  <div class="g-val" id="spd-val">0</div>
+  <div class="g-unit">КМ / Ч</div>
+</div>
+```
+
   </div>
 
   <div id="mid-row">
@@ -341,7 +203,6 @@ html, body {
       <div class="pu-icon">⚡</div>
     </div>
   </div>
-
 </div>
 
 <button id="start-btn">ЗАПУСТИТЬ</button>
@@ -351,10 +212,10 @@ html, body {
 //  STATE
 // ═══════════════════════════════════════════
 const S = {
-  engineOn: false, stall: false, isBiting: false,
-  rpm: 0, speed: 0, gear: 0,
-  clutch: 0, brake: 0, gas: 0,
-  lastT: null,
+  engineOn:false, stall:false, isBiting:false,
+  rpm:0, speed:0, gear:0,
+  clutch:0, brake:0, gas:0,
+  lastT:null,
 };
 
 const IDLE=800, STALL_RPM=420, MAX_RPM=7000, REDLINE=6000;
@@ -369,7 +230,7 @@ const bdot=$('bdot'), biteLbl=$('bite-lbl');
 const speedVign=$('speed-vign');
 
 // ═══════════════════════════════════════════
-//  WEB AUDIO ENGINE SOUND
+//  WEB AUDIO — engine sound + Taptic-style haptic
 // ═══════════════════════════════════════════
 let AC=null, osc1=null, osc2=null, gainEng=null, gainRumble=null, rumble=null;
 
@@ -377,14 +238,10 @@ function initAudio(){
   if(AC) return;
   AC = new (window.AudioContext||window.webkitAudioContext)();
 
-  // distortion shaper
   const shaper = AC.createWaveShaper();
   shaper.curve = distCurve(100); shaper.oversample='2x';
-
-  // low-pass
   const lpf = AC.createBiquadFilter();
   lpf.type='lowpass'; lpf.frequency.value=700; lpf.Q.value=1.2;
-
   gainEng = AC.createGain(); gainEng.gain.value=0;
 
   osc1 = AC.createOscillator(); osc1.type='sawtooth'; osc1.frequency.value=55;
@@ -392,7 +249,6 @@ function initAudio(){
   osc1.connect(shaper); osc2.connect(shaper);
   shaper.connect(lpf); lpf.connect(gainEng); gainEng.connect(AC.destination);
 
-  // rumble
   rumble = AC.createOscillator(); rumble.type='sine'; rumble.frequency.value=26;
   gainRumble = AC.createGain(); gainRumble.gain.value=0;
   rumble.connect(gainRumble); gainRumble.connect(AC.destination);
@@ -401,7 +257,7 @@ function initAudio(){
 }
 
 function distCurve(k){
-  const n=256,c=new Float32Array(n);
+  const n=256, c=new Float32Array(n);
   for(let i=0;i<n;i++){const x=(2*i/n)-1; c[i]=((Math.PI+k)*x)/(Math.PI+k*Math.abs(x));}
   return c;
 }
@@ -413,8 +269,7 @@ function soundEngine(rpm, on){
     const f=42+(rpm/MAX_RPM)*240;
     osc1.frequency.setTargetAtTime(f,t,.05);
     osc2.frequency.setTargetAtTime(f*1.032,t,.05);
-    const v=0.16+(rpm/MAX_RPM)*0.24;
-    gainEng.gain.setTargetAtTime(v,t,.04);
+    gainEng.gain.setTargetAtTime(0.16+(rpm/MAX_RPM)*0.24,t,.04);
     gainRumble.gain.setTargetAtTime(0.07,t,.1);
   } else {
     gainEng.gain.setTargetAtTime(0,t,.35);
@@ -431,20 +286,54 @@ function soundStall(){
   gainRumble.gain.setTargetAtTime(0,t,.2);
 }
 
+// Haptic "thunk" — low-freq burst that iPhone feels through the speaker/body.
+// Also fires navigator.vibrate as fallback where supported.
+function hapticPulse(strength){
+  // Web Audio burst: short envelope of ~50-80Hz sine
+  if(AC){
+    const dur = strength === 'heavy' ? 0.08 : strength === 'medium' ? 0.05 : 0.03;
+    const freq = strength === 'heavy' ? 48 : 62;
+    const amp  = strength === 'heavy' ? 0.7 : strength === 'medium' ? 0.45 : 0.25;
+
+    const o = AC.createOscillator(); o.type='sine'; o.frequency.value=freq;
+    const g = AC.createGain();
+    g.gain.setValueAtTime(0, AC.currentTime);
+    g.gain.linearRampToValueAtTime(amp, AC.currentTime+0.008);
+    g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime+dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(); o.stop(AC.currentTime+dur+0.01);
+  }
+  // Vibration API fallback
+  if(navigator.vibrate){
+    const ms = strength==='heavy'?40:strength==='medium'?20:10;
+    navigator.vibrate(ms);
+  }
+}
+
+// Bite: rhythmic tapping sensation during clutch slip zone
+let biteInterval=null;
+function startBiteHaptic(){
+  if(biteInterval) return;
+  biteInterval = setInterval(()=>hapticPulse('light'), 110);
+}
+function stopBiteHaptic(){
+  if(biteInterval){ clearInterval(biteInterval); biteInterval=null; }
+}
+
 function soundBite(){
   if(!AC) return;
   const sr=AC.sampleRate;
-  const buf=AC.createBuffer(1,Math.floor(sr*.06),sr);
+  const buf=AC.createBuffer(1,Math.floor(sr*.055),sr);
   const d=buf.getChannelData(0);
-  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(sr*.012));
-  const s=AC.createBufferSource();
-  s.buffer=buf;
-  const g=AC.createGain(); g.gain.value=0.35;
+  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(sr*.011));
+  const s=AC.createBufferSource(); s.buffer=buf;
+  const g=AC.createGain(); g.gain.value=0.3;
   s.connect(g); g.connect(AC.destination); s.start();
+  hapticPulse('medium');
 }
 
 // ═══════════════════════════════════════════
-//  PEDALS — spring-return
+//  PEDALS — spring-return, clutch locks at 100%
 // ═══════════════════════════════════════════
 const P = {
   clutch:{val:0,target:0,active:false,tid:null,locked:false},
@@ -457,15 +346,17 @@ function setupPedal(trackId, key, onChange){
   const p=P[key];
   function pct(cy){ const r=track.getBoundingClientRect(); return Math.max(0,Math.min(1,1-(cy-r.top)/r.height)); }
 
-  track.addEventListener('touchstart', e=>{
+  track.addEventListener('touchstart',e=>{
     e.preventDefault();
     if(p.tid!==null) return;
-    initAudio(); if(AC.state==='suspended') AC.resume();
+    initAudio(); if(AC&&AC.state==='suspended') AC.resume();
+    // Touching clutch again cancels lock
+    if(key==='clutch'&&p.locked) p.locked=false;
     const t=e.changedTouches[0]; p.tid=t.identifier; p.active=true;
     p.val=p.target=pct(t.clientY); onChange(p.val);
   },{passive:false});
 
-  window.addEventListener('touchmove', e=>{
+  window.addEventListener('touchmove',e=>{
     if(p.tid===null) return;
     for(const t of e.changedTouches){
       if(t.identifier===p.tid){ p.val=p.target=pct(t.clientY); onChange(p.val); break; }
@@ -475,19 +366,12 @@ function setupPedal(trackId, key, onChange){
   function end(e){
     for(const t of e.changedTouches){
       if(t.identifier===p.tid){
-
-        // сцепление "залипает" только при 100%
-        if(key==='clutch' && p.val >= 0.995){
-          p.locked = true;
-          p.val = 1;
-          p.target = 1;
+        if(key==='clutch'&&p.val>=0.98){
+          p.locked=true; p.val=1; p.target=1;
         } else {
-          p.locked = false;
-          p.target = 0;
+          p.locked=false; p.target=0;
         }
-
-        p.tid=null;
-        p.active=false;
+        p.tid=null; p.active=false;
         break;
       }
     }
@@ -495,38 +379,17 @@ function setupPedal(trackId, key, onChange){
   window.addEventListener('touchend',end);
   window.addEventListener('touchcancel',end);
 
-  // mouse
+  // Mouse
   track.addEventListener('mousedown',e=>{
     initAudio();
-
-    // повторное касание снимает блокировку сцепления
-    if(key==='clutch' && p.locked){
-      p.locked = false;
-    }
-
-    p.active=true;
-    p.val=p.target=pct(e.clientY);
-    onChange(p.val);
+    if(key==='clutch'&&p.locked) p.locked=false;
+    p.active=true; p.val=p.target=pct(e.clientY); onChange(p.val);
   });
-
-  window.addEventListener('mousemove',e=>{
-    if(!p.active)return;
-    p.val=p.target=pct(e.clientY);
-    onChange(p.val);
-  });
-
+  window.addEventListener('mousemove',e=>{ if(!p.active)return; p.val=p.target=pct(e.clientY); onChange(p.val); });
   window.addEventListener('mouseup',()=>{
-    if(!p.active)return;
-
-    if(key==='clutch' && p.val >= 0.995){
-      p.locked = true;
-      p.val = 1;
-      p.target = 1;
-    } else {
-      p.locked = false;
-      p.target = 0;
-    }
-
+    if(!p.active) return;
+    if(key==='clutch'&&p.val>=0.98){ p.locked=true; p.val=1; p.target=1; }
+    else { p.locked=false; p.target=0; }
     p.active=false;
   });
 }
@@ -545,9 +408,9 @@ setupPedal('g-track','gas',   v=>{ S.gas=v;    pedalUI('gf','g-thumb','g-pct',v)
 function tickPedals(dt){
   const K=10;
   for(const [key,p] of Object.entries(P)){
-    if(p.active || p.locked) continue;
+    if(p.active||p.locked) continue;
     const d=p.target-p.val;
-    p.val = Math.abs(d)<.003 ? p.target : p.val+d*Math.min(K*dt,1);
+    p.val=Math.abs(d)<.003?p.target:p.val+d*Math.min(K*dt,1);
     S[key]=p.val;
     if(key==='clutch'){ pedalUI('cf','c-thumb','c-pct',p.val); checkStart(); }
     else if(key==='brake') pedalUI('bf','b-thumb','b-pct',p.val);
@@ -556,37 +419,42 @@ function tickPedals(dt){
 }
 
 // ═══════════════════════════════════════════
-//  GEARS
+//  GEARS — allowed whenever clutch ≥ 65% pressed
 // ═══════════════════════════════════════════
 document.querySelectorAll('.gb').forEach(btn=>{
   btn.addEventListener('click',()=>{
     const g=parseInt(btn.dataset.g);
-    if(S.engineOn && !S.stall && S.clutch<0.65){ flashHint('⚠️ Выжми сцепление!'); return; }
+    // Block only if engine on, clutch NOT pressed enough, and not in stall
+    if(S.engineOn&&!S.stall&&S.clutch<0.65){
+      flashHint('⚠️ Выжми сцепление!'); hapticPulse('heavy'); return;
+    }
     S.gear=g;
     document.querySelectorAll('.gb').forEach(b=>b.classList.remove('act'));
     btn.classList.add('act');
+    hapticPulse('medium');
   });
 });
 
 // ═══════════════════════════════════════════
-//  START
+//  START — shown when clutch locked at 100% + gear=N
 // ═══════════════════════════════════════════
 function checkStart(){
-  startBtn.style.display =
-    (S.clutch > 0.78 && S.gear === 0 && !S.engineOn)
-      ? 'block'
-      : 'none';
+  // Show start if: clutch >= 78% pressed, gear N, engine off
+  const show = S.clutch>=0.78 && S.gear===0 && !S.engineOn;
+  startBtn.style.display = show ? 'block' : 'none';
 }
+
 startBtn.addEventListener('click',()=>{
-  initAudio(); if(AC.state==='suspended') AC.resume();
+  initAudio(); if(AC&&AC.state==='suspended') AC.resume();
   S.engineOn=true; S.stall=false; S.rpm=IDLE;
   elight.classList.add('on'); etext.textContent='ВКЛ';
   startBtn.style.display='none';
+  hapticPulse('heavy');
   flashHint('✅ Запущен! Включи 1-ю и плавно отпускай сцепление');
 });
 
 // ═══════════════════════════════════════════
-//  HINTS — fixed height, fade swap
+//  HINTS
 // ═══════════════════════════════════════════
 let hintTimer=null, persHint=null;
 const H={
@@ -612,39 +480,48 @@ function fadeHint(msg){
 function updateHint(){
   if(persHint) return;
   let m;
-  if(!S.engineOn&&S.stall)          m=H.stall;
-  else if(!S.engineOn)              m=H.off;
-  else if(S.isBiting)               m=H.bite;
-  else if(S.speed>3&&S.brake>0.2&&S.clutch<0.5) m=H.brake;
-  else if(S.gear>0&&S.rpm>3400&&S.clutch<0.3)   m=H.up;
+  if(!S.engineOn&&S.stall)                              m=H.stall;
+  else if(!S.engineOn)                                  m=H.off;
+  else if(S.isBiting)                                   m=H.bite;
+  else if(S.speed>3&&S.brake>0.2&&S.clutch<0.5)        m=H.brake;
+  else if(S.gear>0&&S.rpm>3400&&S.clutch<0.3)          m=H.up;
   else if(S.gear>1&&S.rpm<1100&&S.speed>4&&S.clutch<0.3) m=H.down;
-  else if(S.speed>2)                m=H.go;
-  else                              m=H.idle;
+  else if(S.speed>2)                                    m=H.go;
+  else                                                  m=H.idle;
   fadeHint(m);
 }
 
 // ═══════════════════════════════════════════
-//  GAUGE ARC  — viewBox 0 0 120 70
-//  center (60,64), radius 54
-//  sweep: startDeg=-168, total=156°
+//  GAUGE ARC + NEEDLE
+//  viewBox 0 0 120 70 | center(60,64) | r=54
+//  Arc: from -168° to -12° (sweep 156°)
+//  Needle: rotated via rotate(angle,60,64) — Safari-safe
 // ═══════════════════════════════════════════
-function setArc(arcId,ndlId,val,max){
+const ARC_START=-168, ARC_SWEEP=156;
+const CX=60, CY=64, R_ARC=54;
+
+function setArc(arcId, ndlId, val, max){
   const t=Math.max(0,Math.min(1,val/max));
-  const cx=60,cy=64,r=54;
-  const s=-168, sweep=156;
   const rad=d=>d*Math.PI/180;
-  const sx=cx+r*Math.cos(rad(s)), sy=cy+r*Math.sin(rad(s));
+  const s=ARC_START, sweep=ARC_SWEEP;
+  const sx=CX+R_ARC*Math.cos(rad(s)), sy=CY+R_ARC*Math.sin(rad(s));
   const ea=s+t*sweep;
-  const ex=cx+r*Math.cos(rad(ea)), ey=cy+r*Math.sin(rad(ea));
+  const ex=CX+R_ARC*Math.cos(rad(ea)), ey=CY+R_ARC*Math.sin(rad(ea));
   const arc=$(arcId);
-  if(t<.004){
-    arc.setAttribute('d',`M${sx.toFixed(2)},${sy.toFixed(2)} A${r},${r} 0 0,1 ${sx.toFixed(2)},${sy.toFixed(2)}`);
+  if(t<0.004){
+    // Degenerate arc: just a point (avoids rendering glitch)
+    arc.setAttribute('d',`M${sx.toFixed(2)},${sy.toFixed(2)} A${R_ARC},${R_ARC} 0 0,1 ${(sx+0.01).toFixed(2)},${sy.toFixed(2)}`);
   } else {
     const lg=t*sweep>180?1:0;
-    arc.setAttribute('d',`M${sx.toFixed(2)},${sy.toFixed(2)} A${r},${r} 0 ${lg},1 ${ex.toFixed(2)},${ey.toFixed(2)}`);
+    arc.setAttribute('d',`M${sx.toFixed(2)},${sy.toFixed(2)} A${R_ARC},${R_ARC} 0 ${lg},1 ${ex.toFixed(2)},${ey.toFixed(2)}`);
   }
-  $(ndlId).setAttribute('transform',`rotate(${(s+t*sweep).toFixed(2)},${cx},${cy})`);
+  // Needle: rotate around center point — the only Safari-safe way
+  $(ndlId).setAttribute('transform',`rotate(${(s+t*sweep).toFixed(2)},${CX},${CY})`);
 }
+
+// Set initial needle positions (pointing to -168° = left end of arc)
+setArc('rpm-arc','rpm-ndl',0,MAX_RPM);
+setArc('spd-arc','spd-ndl',0,200);
 
 // ═══════════════════════════════════════════
 //  PHYSICS LOOP
@@ -659,7 +536,7 @@ function loop(ts){
   tickPedals(dt);
 
   if(S.engineOn){
-    const rel=1-S.clutch;         // 0=floor, 1=released
+    const rel=1-S.clutch;
     const bite=rel>=BITE_LO&&rel<=BITE_HI;
     const engaged=rel>BITE_HI;
     S.isBiting=bite;
@@ -676,7 +553,8 @@ function loop(ts){
       if(S.rpm<STALL_RPM&&S.speed<1.5){
         S.engineOn=false; S.stall=true; S.rpm=0;
         elight.classList.remove('on'); etext.textContent='ЗАГЛОХ';
-        soundStall();
+        soundStall(); hapticPulse('heavy');
+        stopBiteHaptic();
       }
     } else if(S.gear!==0&&bite){
       const slip=(rel-BITE_LO)/(BITE_HI-BITE_LO);
@@ -689,7 +567,8 @@ function loop(ts){
     S.rpm+=(tgtRPM-S.rpm)*Math.min((engaged?700:1800)*dt,1);
     S.rpm=Math.max(0,Math.min(MAX_RPM,S.rpm));
 
-    if(bite&&!prevBite) soundBite();
+    if(bite&&!prevBite){ soundBite(); startBiteHaptic(); }
+    if(!bite&&prevBite){ stopBiteHaptic(); }
     prevBite=bite;
     soundEngine(S.rpm,true);
 
@@ -697,6 +576,7 @@ function loop(ts){
     S.speed=Math.max(0,S.speed-12*dt);
     S.rpm=Math.max(0,S.rpm-600*dt);
     soundEngine(S.rpm,false);
+    if(!prevBite){ stopBiteHaptic(); }
     prevBite=false; S.isBiting=false;
     if(S.stall&&S.clutch>0.72&&S.gear===0){
       etext.textContent='ВЫКЛ'; checkStart();
@@ -713,7 +593,6 @@ function loop(ts){
 
   bdot.className=S.isBiting?'on':'';
   biteLbl.textContent=S.isBiting?'🔥 СХВАТ!':'СХВАТ.';
-
   speedVign.style.opacity=Math.min(S.speed/80,.7).toFixed(2);
 
   updateHint();
@@ -724,5 +603,6 @@ function loop(ts){
 
 requestAnimationFrame(loop);
 </script>
+
 </body>
 </html>
