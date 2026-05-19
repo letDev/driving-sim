@@ -446,10 +446,11 @@ function clutchHapticEngine(dt) {
   lastHapticTime = now;
 
   const c = S.clutch; // 0..1
+  const clutch = clutchModel();
   const rpm = S.rpm;
 
   // 1. bite zone detection
-  const inBite = c > 0.28 && c < 0.48;
+  const inBite = clutch.slipping;
 
   // 2. slip intensity (чем ближе к "схвату", тем сильнее)
   let biteFactor = 0;
@@ -687,6 +688,27 @@ function setArc(arcId, ndlId, val, max){
 setArc('rpm-arc','rpm-ndl',0,MAX_RPM);
 setArc('spd-arc','spd-ndl',0,200);
 
+function clutchModel(){
+  const c = S.clutch;
+
+  const bitePoint = 0.42;
+  const width = 0.18;
+
+  const dist = Math.abs(c - bitePoint);
+
+  const engagement = Math.max(0, 1 - dist / width);
+
+  const slipping =
+    c > (bitePoint - width) &&
+    c < (bitePoint + width) &&
+    S.gear !== 0 &&
+    S.engineOn;
+
+  const fullyEngaged = c < (bitePoint - width);
+
+  return { engagement, slipping, fullyEngaged };
+}
+
 // ═══════════════════════════════════════════
 //  PHYSICS LOOP
 // ═══════════════════════════════════════════
@@ -700,14 +722,13 @@ function loop(ts){
   tickPedals(dt);
 
   if(S.engineOn){
-    const rel=1-S.clutch;
-    const bite=rel>=BITE_LO&&rel<=BITE_HI;
-    const engaged=rel>BITE_HI;
-    S.isBiting=bite;
+    const clutch = clutchModel();
+
+    S.isBiting = clutch.slipping;
 
     let tgtRPM=IDLE+S.gas*(MAX_RPM-IDLE);
 
-    if(S.gear!==0&&engaged){
+    if(S.gear !== 0 && clutch.fullyEngaged){
       const ratio=G_RATIO[S.gear]||G_RATIO[1];
       const wRPM=(S.speed/ratio)*1000;
       const load=Math.max(0,1-S.speed/(ratio*6));
@@ -721,18 +742,18 @@ function loop(ts){
 
         
       }
-    } else if(S.gear!==0&&bite){
-      const slip=(rel-BITE_LO)/(BITE_HI-BITE_LO);
-      S.speed=Math.max(0,S.speed+(slip*(S.gas*5+1.5)-S.brake*40-S.speed*.4)*dt);
-      tgtRPM=Math.max(IDLE,IDLE+S.gas*1800-slip*400);
+      } else if(S.gear !== 0 && clutch.slipping){
+        const slip = 1 - clutch.engagement;
+      
+        S.speed += (S.gas * 6 * slip - S.brake * 40) * dt;
+        S.rpm += (S.gas * 1200 - slip * 800);
+      
     } else {
       S.speed=Math.max(0,S.speed-(S.brake*75+S.speed*.25)*dt);
     }
+    
+    S.rpm = S.flywheel;
 
-    S.rpm+=(tgtRPM-S.rpm)*Math.min((engaged?700:1800)*dt,1);
-    S.rpm=Math.max(0,Math.min(MAX_RPM,S.rpm));
-
-    prevBite=bite;
     soundEngine(S.rpm,true);
 
   } else {
@@ -740,7 +761,7 @@ function loop(ts){
     S.rpm=Math.max(0,S.rpm-600*dt);
     soundEngine(S.rpm,false);
     
-    prevBite=false; S.isBiting=false;
+    S.isBiting=false;
     if(S.stall&&S.clutch>0.72&&S.gear===0){
       etext.textContent='ВЫКЛ'; checkStart();
     }
