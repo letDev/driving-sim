@@ -654,6 +654,15 @@ function updateHint(){
   fadeHint(m);
 }
 
+function updateBiteUI(){
+  const el = document.getElementById('bite-pill');
+  if(S.isBiting){
+    el.classList.add('active');
+  } else {
+    el.classList.remove('active');
+  }
+}
+
 // ═══════════════════════════════════════════
 //  GAUGE ARC + NEEDLE
 //  viewBox 0 0 120 70 | center(60,64) | r=54
@@ -754,14 +763,10 @@ function loop(ts){
   setArc('spd-arc','spd-ndl',S.speed,200);
 
   bdot.className=S.isBiting?'on':'';
-  if (S.isBiting) {
-    document.getElementById('bite-pill').classList.add('active');
-  } else {
-    document.getElementById('bite-pill').classList.remove('active');
-  }
   speedVign.style.opacity=Math.min(S.speed/80,.7).toFixed(2);
 
   updateHint();
+  updateBiteUI();
   if(!S.engineOn&&!S.stall) checkStart();
 
   requestAnimationFrame(loop);
