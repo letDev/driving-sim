@@ -726,7 +726,12 @@ function loop(ts){
 
     S.isBiting = clutch.slipping;
 
-    let tgtRPM=IDLE+S.gas*(MAX_RPM-IDLE);
+    let tgtRPM = IDLE + S.gas * (MAX_RPM - IDLE);
+    
+    // если сцепление в зоне схватывания — мотор под нагрузкой
+    if (S.gear !== 0 && !clutch.fullyEngaged) {
+      tgtRPM *= (0.7 + clutch.engagement * 0.6);
+    }
 
     if(S.gear !== 0 && clutch.fullyEngaged){
       const ratio=G_RATIO[S.gear]||G_RATIO[1];
@@ -745,8 +750,10 @@ function loop(ts){
       } else if(S.gear !== 0 && clutch.slipping){
         const slip = 1 - clutch.engagement;
       
-        S.speed += (S.gas * 6 * slip - S.brake * 40) * dt;
-        S.rpm += (S.gas * 1200 - slip * 800);
+        const idleTorque = 1.2; // базовая тяга холостого хода
+
+        S.speed += ((idleTorque + S.gas * 6) * slip - S.brake * 40) * dt;
+        S.rpm += (S.gas * 1200 + idleTorque * 300 - slip * 600);
       
     } else {
       S.speed=Math.max(0,S.speed-(S.brake*75+S.speed*.25)*dt);
