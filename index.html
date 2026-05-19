@@ -649,7 +649,7 @@ function loop(ts){
   setArc('spd-arc','spd-ndl',S.speed,200);
 
   bdot.className=S.isBiting?'on':'';
-  biteLbl.textContent=S.isBiting?'🔥СХВАТ':'СХВАТ.';
+  biteLbl.textContent=S.isBiting?'🔥СХВАТ':'  СХВАТ';
   speedVign.style.opacity=Math.min(S.speed/80,.7).toFixed(2);
 
   updateHint();
