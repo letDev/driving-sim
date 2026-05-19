@@ -730,7 +730,7 @@ function loop(ts){
 
     if(S.gear !== 0 && clutch.fullyEngaged){
       const ratio=G_RATIO[S.gear]||G_RATIO[1];
-      const ratio = G_RATIO[S.gear] ?? 10;
+      const wRPM=(S.speed/ratio)*1000;
       const load=Math.max(0,1-S.speed/(ratio*6));
       tgtRPM=Math.max(IDLE,wRPM+S.gas*1800*load);
       const pull=(S.rpm-wRPM*.4)/900;
