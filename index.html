@@ -116,6 +116,20 @@ html, body { width:100%; height:100%; overflow:hidden; background:#080a10; font-
 #bdot.on { border-color:var(–accent); background:var(–accent); box-shadow:0 0 8px var(–accent); }
 #bite-lbl { font-size:9px; color:var(–dim); letter-spacing:1px; white-space:nowrap; }
 
+#bite-pill.active {
+  border-color: var(--accent);
+}
+
+#bite-pill.active #bdot {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+
+#bite-pill.active #bite-lbl {
+  color: var(--accent);
+}
+
 /* PEDALS */
 #pedals {
   flex:1;
@@ -294,7 +308,7 @@ cursor:pointer; display:none;
   
     <div id="bite-pill">
       <div id="bdot"></div>
-      <div id="bite-lbl">  СХВАТ</div>
+      <div id="bite-lbl">СХВАТ</div>
     </div>
 </div>
   </div>
@@ -406,15 +420,6 @@ function hapticPulse(strength){
 }
 
 // Bite: rhythmic tapping sensation during clutch slip zone
-let biteInterval=null;
-function startBiteHaptic(){
-  if(biteInterval) return;
-  biteInterval = setInterval(()=>hapticPulse('light'), 110);
-}
-function stopBiteHaptic(){
-  if(biteInterval){ clearInterval(biteInterval); biteInterval=null; }
-}
-
 function soundBite(){
   if(!AC) return;
   const sr=AC.sampleRate;
@@ -426,6 +431,69 @@ function soundBite(){
   s.connect(g); g.connect(AC.destination); s.start();
   hapticPulse('medium');
 }
+
+// ═══════════════════════════════════════
+//  CLUTCH HAPTIC ENGINE (analog feedback)
+// ═══════════════════════════════════════
+
+let lastHapticTime = 0;
+
+function clutchHapticEngine(dt) {
+  if (!AC || !S.engineOn) return;
+
+  const now = performance.now();
+  if (now - lastHapticTime < 35) return; // ~28Hz max haptics
+  lastHapticTime = now;
+
+  const c = S.clutch; // 0..1
+  const rpm = S.rpm;
+
+  // 1. bite zone detection
+  const inBite = c > 0.28 && c < 0.48;
+
+  // 2. slip intensity (чем ближе к "схвату", тем сильнее)
+  let biteFactor = 0;
+  if (inBite) {
+    const center = 0.38;
+    const dist = Math.abs(c - center) / 0.2; // 0..1
+    biteFactor = 1 - dist;
+  }
+
+  // 3. engine load feedback (чем выше RPM — тем плотнее вибрация)
+  const rpmFactor = Math.min(rpm / 5000, 1);
+
+  // 4. final intensity
+  const intensity = (biteFactor * 1.0) + (rpmFactor * 0.25);
+
+  if (intensity < 0.08) return;
+
+  // WebAudio haptic pulse
+  const dur = 0.015 + intensity * 0.04;
+  const freq = 45 + intensity * 40;
+  const amp  = 0.08 + intensity * 0.6;
+
+  const o = AC.createOscillator();
+  const g = AC.createGain();
+
+  o.type = 'sine';
+  o.frequency.value = freq;
+
+  g.gain.setValueAtTime(0, AC.currentTime);
+  g.gain.linearRampToValueAtTime(amp, AC.currentTime + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + dur);
+
+  o.connect(g);
+  g.connect(AC.destination);
+
+  o.start();
+  o.stop(AC.currentTime + dur + 0.02);
+
+  // lightweight iOS tick fallback
+  if (navigator.vibrate) {
+    navigator.vibrate(Math.floor(intensity * 12));
+  }
+}
+
 
 // ═══════════════════════════════════════════
 //  PEDALS — spring-return, clutch locks at 100%
@@ -649,7 +717,8 @@ function loop(ts){
         S.engineOn=false; S.stall=true; S.rpm=0;
         elight.classList.remove('on'); etext.textContent='ЗАГЛОХ';
         soundStall(); hapticPulse('heavy');
-        stopBiteHaptic();
+
+        
       }
     } else if(S.gear!==0&&bite){
       const slip=(rel-BITE_LO)/(BITE_HI-BITE_LO);
@@ -662,8 +731,6 @@ function loop(ts){
     S.rpm+=(tgtRPM-S.rpm)*Math.min((engaged?700:1800)*dt,1);
     S.rpm=Math.max(0,Math.min(MAX_RPM,S.rpm));
 
-    if(bite&&!prevBite){ soundBite(); startBiteHaptic(); }
-    if(!bite&&prevBite){ stopBiteHaptic(); }
     prevBite=bite;
     soundEngine(S.rpm,true);
 
@@ -671,7 +738,7 @@ function loop(ts){
     S.speed=Math.max(0,S.speed-12*dt);
     S.rpm=Math.max(0,S.rpm-600*dt);
     soundEngine(S.rpm,false);
-    if(!prevBite){ stopBiteHaptic(); }
+    
     prevBite=false; S.isBiting=false;
     if(S.stall&&S.clutch>0.72&&S.gear===0){
       etext.textContent='ВЫКЛ'; checkStart();
@@ -687,13 +754,18 @@ function loop(ts){
   setArc('spd-arc','spd-ndl',S.speed,200);
 
   bdot.className=S.isBiting?'on':'';
-  biteLbl.textContent=S.isBiting?'🔥СХВАТ':'  СХВАТ';
+  if (S.isBiting) {
+    document.getElementById('bite-pill').classList.add('active');
+  } else {
+    document.getElementById('bite-pill').classList.remove('active');
+  }
   speedVign.style.opacity=Math.min(S.speed/80,.7).toFixed(2);
 
   updateHint();
   if(!S.engineOn&&!S.stall) checkStart();
 
   requestAnimationFrame(loop);
+  clutchHapticEngine(dt);
 }
 
 requestAnimationFrame(loop);
