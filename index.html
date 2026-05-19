@@ -752,6 +752,8 @@ function loop(ts){
       S.speed=Math.max(0,S.speed-(S.brake*75+S.speed*.25)*dt);
     }
     
+    // мягкое приближение
+    S.rpm += (tgtRPM - S.rpm) * Math.min(8 * dt, 1);
     S.rpm = Math.max(0, Math.min(MAX_RPM, S.rpm));
 
     soundEngine(S.rpm,true);
