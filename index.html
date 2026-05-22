@@ -12,9 +12,17 @@
 box-sizing: border-box; margin: 0; padding: 0;
 -webkit-user-select: none; user-select: none;
 -webkit-tap-highlight-color: transparent;
-touch-action: none;
+.track {
+  touch-action: none;
 }
-html, body { width:100%; height:100%; overflow:hidden; background:#080a10; font-family:‘Share Tech Mono’,monospace; color:#b8bcd8; }
+
+.thumb,
+.fill {
+  pointer-events: none;
+}
+}
+html, body { width:100%; height:100%; overflow:hidden; background:#080a10; 
+font-family:'Share Tech Mono', monospace; color:#b8bcd8; }
 
 :root {
 --accent:#f0a500; --red:#e03535; --green:#18b858; --blue:#2878e0;
@@ -34,7 +42,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:#080a10; font-
 
 /* TOP BAR */
 #top-bar { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:8px 14px 6px; background:var(--panel); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
-#title { font-family:‘Orbitron’,monospace; font-size:11px; font-weight:900; color:var(--accent); letter-spacing:3px; }
+#title { font-family:'Orbitron',monospace; font-size:11px; font-weight:900; color:var(--accent); letter-spacing:3px; }
 #engine-pill { display:flex; align-items:center; gap:6px; font-size:10px; }
 #elight { width:7px; height:7px; border-radius:50%; background:var(--red); box-shadow:0 0 5px var(--red); transition:all .25s; }
 #elight.on { background:var(--green); box-shadow:0 0 8px var(--green); }
@@ -49,7 +57,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:#080a10; font-
 .g-label { font-size:8px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; }
 .g-arc { width:100%; }
 .g-arc svg { width:100%; display:block; overflow:visible; }
-.g-val { font-family:‘Orbitron’,monospace; font-size:21px; font-weight:700; color:var(--accent); min-width:60px; text-align:center; line-height:1; }
+.g-val { font-family:'Orbitron',monospace; font-size:21px; font-weight:700; color:var(--accent); min-width:60px; text-align:center; line-height:1; }
 .g-val.red { color:var(--red); }
 .g-unit { font-size:8px; color:var(--dim); letter-spacing:1px; }
 
@@ -201,7 +209,7 @@ pointer-events:auto;
 background:var(--accent); color:#000;
 border:none; border-radius:14px;
 padding:13px 38px;
-font-family:‘Orbitron’,monospace; font-size:13px; font-weight:900; letter-spacing:3px;
+font-family:'Orbitron',monospace; font-size:13px; font-weight:900; letter-spacing:3px;
 box-shadow:0 0 28px rgba(240,165,0,.4);
 cursor:pointer; display:none;
 }
