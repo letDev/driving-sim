@@ -331,6 +331,15 @@ const IDLE=800, STALL_RPM=420, MAX_RPM=7000, REDLINE=6000;
 const G_RATIO = {'-1':8, 1:10, 2:20, 3:32, 4:46, 5:65};
 const BITE_LO=0.28, BITE_HI=0.48;
 
+const GEAR_RATIO = {
+  '-1': -3.2,
+  '1': 3.58,
+  '2': 2.04,
+  '3': 1.41,
+  '4': 1.12,
+  '5': 0.89
+};
+
 const $=id=>document.getElementById(id);
 const elight=$('elight'), etext=$('etext'), hintEl=$('hint-text');
 const rpmEl=$('rpm-val'), spdEl=$('spd-val');
@@ -445,20 +454,25 @@ function clutchHapticEngine(dt) {
   if (now - lastHapticTime < 35) return; // ~28Hz max haptics
   lastHapticTime = now;
 
-  const c = S.clutch; // 0..1
-  const clutch = clutchModel();
   const rpm = S.rpm;
 
-  // 1. bite zone detection
-  const inBite = clutch.slipping;
+const clutchEngagement =
+  getClutchEngagement();
+
+const inBite =
+  clutchEngagement > 0.15 &&
+  clutchEngagement < 0.85;
 
   // 2. slip intensity (чем ближе к "схвату", тем сильнее)
   let biteFactor = 0;
   if (inBite) {
-    const center = 0.38;
-    const dist = Math.abs(c - center) / 0.2; // 0..1
-    biteFactor = 1 - dist;
-  }
+
+  biteFactor =
+    1 - Math.abs(clutchEngagement - 0.5) * 2;
+
+  biteFactor =
+    Math.max(0, biteFactor);
+}
 
   // 3. engine load feedback (чем выше RPM — тем плотнее вибрация)
   const rpmFactor = Math.min(rpm / 5000, 1);
@@ -581,8 +595,16 @@ document.querySelectorAll('.gb').forEach(btn=>{
   btn.addEventListener('pointerdown',()=>{
     const g=parseInt(btn.dataset.g);
     // Block only if engine on, clutch NOT pressed enough, and not in stall
-    if(S.engineOn&&!S.stall&&S.clutch<0.65){
-      flashHint('⚠️ Выжми сцепление!'); hapticPulse('heavy'); return;
+    if (
+      S.engineOn &&
+      S.clutch < 0.25 &&
+      S.gear !== 0
+    ) {
+      flashHint('⚠️ Хруст синхронизаторов');
+    
+      hapticPulse('heavy');
+    
+      S.rpm -= 250;
     }
     S.gear=g;
     document.querySelectorAll('.gb').forEach(b=>b.classList.remove('act'));
@@ -602,7 +624,19 @@ function checkStart(){
 
 startBtn.addEventListener('pointerdown',()=>{
   initAudio(); if(AC&&AC.state==='suspended') AC.resume();
-  S.engineOn=true; S.stall=false; S.rpm=IDLE;
+  S.engineOn=true;
+  S.stall=false;
+  S.rpm=200;
+  const startAnim = setInterval(() => {
+
+    S.rpm += 140;
+  
+    if (S.rpm >= IDLE) {
+      S.rpm = IDLE;
+      clearInterval(startAnim);
+    }
+  
+  }, 30);
   elight.classList.add('on'); etext.textContent='ВКЛ';
   startBtn.style.display='none';
   hapticPulse('heavy');
@@ -688,31 +722,13 @@ function setArc(arcId, ndlId, val, max){
 setArc('rpm-arc','rpm-ndl',0,MAX_RPM);
 setArc('spd-arc','spd-ndl',0,200);
 
-function clutchModel(){
-  const c = S.clutch;
-
-  const bitePoint = 0.42;
-  const width = 0.18;
-
-  const dist = Math.abs(c - bitePoint);
-
-  const engagement = Math.max(0, 1 - dist / width);
-
-  const slipping =
-    c > (bitePoint - width) &&
-    c < (bitePoint + width) &&
-    S.gear !== 0 &&
-    S.engineOn;
-
-  const fullyEngaged = c < (bitePoint - width);
-
-  return { engagement, slipping, fullyEngaged };
-}
-
 // ═══════════════════════════════════════════
 //  PHYSICS LOOP
 // ═══════════════════════════════════════════
-let prevBite=false;
+
+let lastClutch = 0;
+
+let throttleSmoothing = 0;
 
 function loop(ts){
   if(!S.lastT) S.lastT=ts;
@@ -720,44 +736,217 @@ function loop(ts){
   S.lastT=ts;
 
   tickPedals(dt);
+  const clutchVelocity =
+  (S.clutch - lastClutch) / dt;
 
-  if(S.engineOn){
-    const clutch = clutchModel();
+  lastClutch = S.clutch;
+  
+  throttleSmoothing +=
+  (S.gas - throttleSmoothing)
+  * dt * 4;
 
-    S.isBiting = clutch.slipping;
-
-    let tgtRPM = IDLE + S.gas * (MAX_RPM - IDLE);
+    if (S.engineOn) {
     
-    // если сцепление в зоне схватывания — мотор под нагрузкой
-    if (S.gear !== 0 && !clutch.fullyEngaged) {
-      tgtRPM *= (0.7 + clutch.engagement * 0.6);
-    }
-
-    if(S.gear !== 0 && clutch.fullyEngaged){
-      const ratio=G_RATIO[S.gear]||G_RATIO[1];
-      const wRPM=(S.speed/ratio)*1000;
-      const load=Math.max(0,1-S.speed/(ratio*6));
-      tgtRPM=Math.max(IDLE,wRPM+S.gas*1800*load);
-      const pull=(S.rpm-wRPM*.4)/900;
-      S.speed=Math.max(0,S.speed+(pull*7-S.brake*55-S.speed*.35)*dt);
-      if(S.rpm<STALL_RPM&&S.speed<1.5){
-        S.engineOn=false; S.stall=true; S.rpm=0;
-        elight.classList.remove('on'); etext.textContent='ЗАГЛОХ';
-        soundStall(); hapticPulse('heavy');
-
-        
+      const gearRatio =
+        S.gear === 0
+          ? 0
+          : GEAR_RATIO[String(S.gear)] * FINAL_DRIVE;
+    
+      const clutchEngagement = getClutchEngagement();
+    
+      // RPM колес
+      const wheelAngular =
+        S.speed / 3.6 / WHEEL_RADIUS;
+    
+      const wheelRPM =
+        wheelAngular * 60 / (Math.PI * 2);
+    
+      // RPM коробки
+      const gearboxRPM =
+        Math.abs(gearRatio) > 0
+          ? wheelRPM * Math.abs(gearRatio)
+          : 0;
+    
+      // ===== ENGINE TORQUE =====
+    
+      const throttleTorque =
+        IDLE_TORQUE +
+        throttleSmoothing * MAX_ENGINE_TORQUE;
+    
+      // torque curve
+      const powerBand =
+        1 - Math.abs(S.rpm - 4200) / 4200;
+    
+      const engineTorque =
+        throttleTorque *
+        Math.max(0.35, powerBand);
+    
+      // ===== CLUTCH SLIP =====
+    
+      const rpmDifference =
+        S.rpm - gearboxRPM;
+    
+      if (
+        clutchVelocity < -4 &&
+        Math.abs(rpmDifference) > 1800
+      ) {
+        hapticPulse('heavy');
+      
+        S.rpm -= 350;
+      
+        flashHint('⚠️ Резко бросил сцепление');
       }
-      } else if(S.gear !== 0 && clutch.slipping){
-        const slip = 1 - clutch.engagement;
+    
+      const clutchTorque =
+        Math.max(
+          -CLUTCH_MAX_TORQUE,
+          Math.min(
+            CLUTCH_MAX_TORQUE,
+            rpmDifference * clutchEngagement * 0.22
+          )
+        );
+    
+      // ===== ENGINE RPM =====
+    
+      const engineResistance =
+        S.rpm * ENGINE_BRAKE;
+    
+      const rpmAccel =
+        (
+          engineTorque
+          - clutchTorque
+          - engineResistance
+        ) / ENGINE_INERTIA;
+    
+      S.rpm += rpmAccel * dt;
+    
+      // idle control
+      if (throttleSmoothing < 0.05 && S.rpm < IDLE) {
+        S.rpm += 1800 * dt;
+      }
       
-        const idleTorque = 1.2; // базовая тяга холостого хода
-
-        S.speed += ((idleTorque + S.gas * 6) * slip - S.brake * 40) * dt;
-        S.rpm += (S.gas * 1200 + idleTorque * 300 - slip * 600);
-      
-    } else {
-      S.speed=Math.max(0,S.speed-(S.brake*75+S.speed*.25)*dt);
+      if (
+        S.rpm < 700 &&
+        throttleSmoothing < 0.05
+      ) {
+        S.rpm += 1200 * dt;
+      }
+    
+      // ===== STALL =====
+    
+      const canStall =
+        S.gear !== 0 &&
+        clutchEngagement > 0.82 &&
+        S.speed < 6;
+    
+      if (S.rpm < 520 && canStall) {
+    
+        S.engineOn = false;
+        S.stall = true;
+    
+        S.rpm = 0;
+    
+        elight.classList.remove('on');
+        etext.textContent='ЗАГЛОХ';
+    
+        soundStall();
+        hapticPulse('heavy');
+    
+        flashHint('💀 Заглох');
+      }
+    
+      // ===== VEHICLE =====
+    
+      if (gearRatio !== 0) {
+    
+        const driveForce =
+          clutchTorque *
+          gearRatio /
+          WHEEL_RADIUS;
+    
+        const brakeForce =
+          S.brake * 9000;
+    
+        const dragForce =
+          S.speed * S.speed * AIR_DRAG;
+    
+        const rolling =
+          ROLLING_DRAG * VEHICLE_MASS;
+    
+        const accel =
+          (
+            driveForce
+            - brakeForce
+            - dragForce
+            - rolling
+          ) / VEHICLE_MASS;
+    
+        S.speed += accel * dt * 3.6;
+    
+        if (S.speed < 0) {
+          S.speed = 0;
+          }
+          if (
+        S.gear === 1 &&
+        clutchEngagement > 0.4 &&
+        throttleSmoothing < 0.05
+      ) {
+        S.speed += 0.8 * dt;
+      }
+      }
+      else {
+    
+        // neutral roll
+        const brakeForce =
+          S.brake * 9000;
+    
+        const dragForce =
+          S.speed * S.speed * AIR_DRAG;
+    
+        const rolling =
+          ROLLING_DRAG * VEHICLE_MASS;
+    
+        const accel =
+          (
+            - brakeForce
+            - dragForce
+            - rolling
+          ) / VEHICLE_MASS;
+    
+        S.speed += accel * dt * 3.6;
+    
+        if (S.speed < 0)
+          S.speed = 0;
+      }
+    
+      // ===== REV LIMITER =====
+    
+      if (S.rpm > MAX_RPM) {
+        S.rpm = MAX_RPM;
+      }
+    
+      // ===== BITE POINT =====
+    
+      S.isBiting =
+        clutchEngagement > 0.15 &&
+        clutchEngagement < 0.85 &&
+        Math.abs(rpmDifference) > 250;
+    
+      // ===== ENGINE SHAKE =====
+    
+      if (
+        S.isBiting &&
+        Math.abs(rpmDifference) > 1200
+      ) {
+        hapticPulse('light');
+      }
+    
+      // ===== SOUND =====
+    
+      soundEngine(S.rpm, true);
     }
+  
+    
     
     // мягкое приближение
     S.rpm += (tgtRPM - S.rpm) * Math.min(8 * dt, 1);
